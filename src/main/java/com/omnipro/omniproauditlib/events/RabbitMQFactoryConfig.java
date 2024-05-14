@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 @Configuration
 public class RabbitMQFactoryConfig {
 
-    @Value("${blusalt.audit-service.url}")
+    @Value("${omnipro.audit-service.url}")
     private String auditServiceUrl;
 
     @Value("${spring.profiles.active}")

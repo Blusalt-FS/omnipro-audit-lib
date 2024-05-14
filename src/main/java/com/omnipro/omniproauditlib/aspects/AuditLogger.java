@@ -41,7 +41,6 @@ public class AuditLogger {
 
     @Around(value = "@annotation(com.omnipro.omniproauditlib.annotations.Audit)")
     public Object auditEventHandler(ProceedingJoinPoint joinPoint) throws Throwable {
-
         Signature methodSignature = joinPoint.getSignature();
         MethodSignature signature = (MethodSignature) methodSignature;
         Method method = joinPoint.getTarget().getClass()
@@ -52,25 +51,25 @@ public class AuditLogger {
             request.put(signature.getParameterNames()[i], object[i].toString());
         }
         Date startTime = Date.from(Instant.now());
-        // save Audit before method run
+
         AuditDto auditDto = new AuditDto();
         auditDto.setIpAddress(getClientIp(httpServletRequest));
         auditDto.setStartDate(startTime);
-        auditDto.setApplication(applicationName);
+        auditDto.setService(applicationName);
         auditDto.setRequest(request);
         auditDto.setActivity(method.getAnnotation(Audit.class).activity());
         auditDto.setProcessId(UUID.randomUUID().toString());
         if (method.getAnnotation(Audit.class).isMetaDataRequired()) {
             AuditMetaData auditMetaData = auditMetadataExtractor.getAuditMetaData();
             auditDto.setInstitutionName(auditMetaData.getInstitutionName());
-            auditDto.setUserId(auditMetaData.getUserId());
+            auditDto.setUserName(auditMetaData.getUsername());
         }
         auditService.saveAudit(auditDto);
         Object proceed = joinPoint.proceed();
-        //save audit after running using starttime for update
+
         auditDto.setResponseBody(proceed);
         auditService.saveAudit(auditDto);
-        // end of activities
+
         return proceed;
     }
 

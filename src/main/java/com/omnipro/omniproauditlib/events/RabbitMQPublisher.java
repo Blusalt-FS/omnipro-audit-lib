@@ -30,6 +30,7 @@ public class RabbitMQPublisher {
 
             channel.basicPublish(AUDIT_EXCHANGE_NAME, AUDIT_ROUTING_KEY, null,
                     mapper.writeValueAsString(auditDto).getBytes(Charset.defaultCharset()));
+            log.info(mapper.writeValueAsString(auditDto));
             log.info("Successfully published audit event");
         } catch (IOException ex) {
             log.error("Error publishing audit event");

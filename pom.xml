@@ -42,7 +42,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
-			<version>2.7.2</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
@@ -64,6 +63,13 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+
+
 	</dependencies>
 
 	<dependencyManagement>
@@ -78,18 +84,12 @@
 		</dependencies>
 	</dependencyManagement>
 
-	<repositories>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/blusalt-fs/maven-repository</url>
-		</repository>
-	</repositories>
+
 	<distributionManagement>
 		<repository>
 			<id>github</id>
 			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/blusalt-fs/maven-repository</url>
+			<url>https://maven.pkg.github.com/Blusalt-FS/omnipro-audit-lib</url>
 		</repository>
 	</distributionManagement>
 
