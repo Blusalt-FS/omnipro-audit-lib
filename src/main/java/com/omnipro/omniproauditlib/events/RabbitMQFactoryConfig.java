@@ -18,23 +18,27 @@ import java.util.concurrent.TimeoutException;
 @Configuration
 public class RabbitMQFactoryConfig {
 
-    @Value("${omnipro.audit-service.url}")
-    private String auditServiceUrl;
+
+    @Value("${omnipro.audit-service.rabbit.url}")
+    private String auditServiceRabbitUrl;
+
+    @Value("${omnipro.audit-service.rabbit.userName}")
+    private String auditServiceRabbitUsername;
+
+    @Value("${omnipro.audit-service.rabbit.password}")
+    private String auditServiceRabbitPassword;
 
     @Value("${spring.profiles.active}")
     private String profile;
-    RestTemplate restTemplate = new RestTemplate();
 
 
     @Bean
-    public Connection rabbitMQConnectionFactory()
-            throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException, IOException, TimeoutException {
-        Map<String, Object> map = restTemplate.getForObject(auditServiceUrl + "/clients/rabbitmq-uri", Map.class);
+    public Connection rabbitMQConnectionFactory() throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException, IOException, TimeoutException {
+
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        Map<String, String> data = (Map<String, String>) map.get("data");
-        String uri = data.get("uri");
-        String username = data.get("username");
-        String password = data.get("password");
+        String uri = auditServiceRabbitUrl;
+        String username = auditServiceRabbitUsername;
+        String password = auditServiceRabbitPassword;
         connectionFactory.setUri(uri);
         if (!Objects.equals(profile, "local")) {
             connectionFactory.setUsername(username);
