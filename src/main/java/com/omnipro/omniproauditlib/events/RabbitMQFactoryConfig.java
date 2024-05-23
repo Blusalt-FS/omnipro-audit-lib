@@ -19,13 +19,13 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQFactoryConfig {
 
 
-    @Value("${omnipro.audit-service.rabbit.url}")
+    @Value("${omnipro.audit-service.rabbit-url}")
     private String auditServiceRabbitUrl;
 
-    @Value("${omnipro.audit-service.rabbit.userName}")
+    @Value("${omnipro.audit-service.rabbit-userName}")
     private String auditServiceRabbitUsername;
 
-    @Value("${omnipro.audit-service.rabbit.password}")
+    @Value("${omnipro.audit-service.rabbit-password}")
     private String auditServiceRabbitPassword;
 
     @Value("${spring.profiles.active}")
