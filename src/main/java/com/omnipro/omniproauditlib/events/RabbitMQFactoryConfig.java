@@ -35,12 +35,10 @@ public class RabbitMQFactoryConfig {
         String uri = data.get("uri");
         String username = data.get("username");
         String password = data.get("password");
-        String virtualHost = data.get("virtualHost");
         connectionFactory.setUri(uri);
         if (!Objects.equals(profile, "local")) {
             connectionFactory.setUsername(username);
             connectionFactory.setPassword(password);
-            connectionFactory.setVirtualHost(virtualHost);
         }
         return connectionFactory.newConnection();
     }
