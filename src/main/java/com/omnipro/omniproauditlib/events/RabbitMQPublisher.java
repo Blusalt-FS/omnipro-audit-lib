@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import com.omnipro.omniproauditlib.dtos.AuditDto;
 import java.io.IOException;
@@ -15,11 +16,15 @@ import static com.omnipro.omniproauditlib.Constant.RabbitMQ.*;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class RabbitMQPublisher {
 
     private final Channel channel;
     private final ObjectMapper mapper;
+
+    public RabbitMQPublisher(Channel channel, @Qualifier("auditObjectMapper") ObjectMapper objectMapper) {
+        this.channel = channel;
+        this.mapper = objectMapper;
+    }
 
     public void publishAuditEvent(AuditDto auditDto) {
         try {

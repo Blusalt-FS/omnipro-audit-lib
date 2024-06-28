@@ -19,31 +19,14 @@ import java.util.concurrent.TimeoutException;
 public class RabbitMQFactoryConfig {
 
 
-    @Value("${omnipro.audit-service.rabbit-url}")
-    private String auditServiceRabbitUrl;
-
-    @Value("${omnipro.audit-service.rabbit-userName}")
-    private String auditServiceRabbitUsername;
-
-    @Value("${omnipro.audit-service.rabbit-password}")
-    private String auditServiceRabbitPassword;
-
-    @Value("${spring.profiles.active}")
-    private String profile;
+    @Value("${spring.rabbitmq.addresses}")
+    private String auditServiceAddress;
 
 
     @Bean
     public Connection rabbitMQConnectionFactory() throws URISyntaxException, NoSuchAlgorithmException, KeyManagementException, IOException, TimeoutException {
-
         ConnectionFactory connectionFactory = new ConnectionFactory();
-        String uri = auditServiceRabbitUrl;
-        String username = auditServiceRabbitUsername;
-        String password = auditServiceRabbitPassword;
-        connectionFactory.setUri(uri);
-        if (!Objects.equals(profile, "local")) {
-            connectionFactory.setUsername(username);
-            connectionFactory.setPassword(password);
-        }
+        connectionFactory.setUri(auditServiceAddress);
         return connectionFactory.newConnection();
     }
 
