@@ -21,7 +21,7 @@ public class RabbitMQChannelFactory {
         return connection.createChannel(9);
     }
 
-    @Bean
+    @Bean(name = "auditObjectMapper")
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
