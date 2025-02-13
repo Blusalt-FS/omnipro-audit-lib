@@ -64,7 +64,7 @@ public class AuditLogger {
             auditDto.setInstitutionName(auditMetaData.getInstitutionName());
             auditDto.setUserName(auditMetaData.getUsername());
             auditDto.setName(auditMetaData.getName());
-            auditDto.setUserType(auditDto.getUserType());
+            auditDto.setUserType(auditMetaData.getUserType());
         }
         auditService.saveAudit(auditDto);
         Object proceed = joinPoint.proceed();
