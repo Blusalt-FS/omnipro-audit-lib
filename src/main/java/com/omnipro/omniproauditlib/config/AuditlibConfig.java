@@ -26,8 +26,9 @@ public class AuditlibConfig {
                     ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             String institutionName = institutionNameExtractor.extractInstitutionName(request);
             String userName = institutionNameExtractor.getAuthenticatedUser();
-
-            return new AuditMetaData(institutionName,userName);
+            String name = institutionNameExtractor.getName();
+            String userType = institutionNameExtractor.getUserType();
+            return new AuditMetaData(institutionName,userName,name,userType);
         };
     }
 }
