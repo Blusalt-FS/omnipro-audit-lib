@@ -26,7 +26,7 @@ public class RabbitMQPublisher {
         this.mapper = objectMapper;
     }
 
-    public void publishAuditEvent(AuditDto auditDto) {
+    public void publishAuditEvent(AuditDto auditDto, boolean failOnError) {
         try {
             channel.exchangeDeclare(AUDIT_EXCHANGE_NAME, "direct", true);
             channel.queueDeclare(AUDIT_QUEUE_NAME, true, false, false, null);
@@ -37,8 +37,11 @@ public class RabbitMQPublisher {
                     mapper.writeValueAsString(auditDto).getBytes(Charset.defaultCharset()));
             log.info(mapper.writeValueAsString(auditDto));
             log.info("Successfully published audit event");
-        } catch (IOException ex) {
-            log.error("Error publishing audit event");
+        } catch (Exception ex) {
+            log.error("Error publishing audit event", ex);
+            if (failOnError) {
+                throw new RuntimeException("Audit logging failed for critical operation", ex);
+            }
         }
     }
 

@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface Audit {
     String activity();
     boolean isMetaDataRequired();
+    boolean failOnError() default false;
 }
