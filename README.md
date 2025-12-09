@@ -18,7 +18,7 @@ To use this library in your project, add the following dependency to your `pom.x
 <dependency>
   <groupId>com.omnipro.omniproauditlib</groupId>
   <artifactId>omnipro-audit-library</artifactId>
-  <version>0.2.3</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
