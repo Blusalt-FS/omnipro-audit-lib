@@ -52,23 +52,26 @@ public class AuditLogger {
         }
         Date startTime = Date.from(Instant.now());
 
+        Audit auditAnnotation = method.getAnnotation(Audit.class);
+        boolean failOnError = auditAnnotation.failOnError();
+
         AuditDto auditDto = new AuditDto();
         auditDto.setIpAddress(getClientIp(httpServletRequest));
         auditDto.setStartDate(startTime);
         auditDto.setService(applicationName);
         auditDto.setRequest(request);
-        auditDto.setActivity(method.getAnnotation(Audit.class).activity());
+        auditDto.setActivity(auditAnnotation.activity());
         auditDto.setProcessId(UUID.randomUUID().toString());
-        if (method.getAnnotation(Audit.class).isMetaDataRequired()) {
+        if (auditAnnotation.isMetaDataRequired()) {
             AuditMetaData auditMetaData = auditMetadataExtractor.getAuditMetaData();
             auditDto.setInstitutionName(auditMetaData.getInstitutionName());
             auditDto.setUserName(auditMetaData.getUsername());
         }
-        auditService.saveAudit(auditDto);
+        auditService.saveAudit(auditDto, failOnError);
         Object proceed = joinPoint.proceed();
 
         auditDto.setResponseBody(proceed);
-        auditService.saveAudit(auditDto);
+        auditService.saveAudit(auditDto, failOnError);
 
         return proceed;
     }

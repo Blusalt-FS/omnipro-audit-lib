@@ -13,7 +13,7 @@ public class AuditService {
     private final RabbitMQPublisher rabbitMQPublisher;
     private static final ThreadLocal<String> contextHolder = new ThreadLocal<>();
 
-    public void saveAudit(AuditDto auditDto) {
-        rabbitMQPublisher.publishAuditEvent(auditDto);
+    public void saveAudit(AuditDto auditDto, boolean failOnError) {
+        rabbitMQPublisher.publishAuditEvent(auditDto, failOnError);
     }
 }
