@@ -28,4 +28,6 @@ public class AuditDto {
     private Object responseBody;
     private String processId;
     private String userName;
+    private String name;
+    private String userType;
 }

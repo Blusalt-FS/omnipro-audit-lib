@@ -6,6 +6,10 @@ public interface InstitutionNameExtractor {
 
     String getAuthenticatedUser();
 
+    String getName();
+
+    String getUserType();
+
     String extractInstitutionName(HttpServletRequest request);
 }
 

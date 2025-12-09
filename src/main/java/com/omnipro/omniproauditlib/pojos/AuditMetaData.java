@@ -8,4 +8,6 @@ import lombok.Data;
 public class AuditMetaData {
     private String institutionName;
     private String username;
+    private String name;
+    private String userType;
 }
