@@ -32,7 +32,8 @@ public class CustomHeaderInstitutionExtractor implements InstitutionNameExtracto
             email = userDetail.getUsername();
         }
         else if (principal instanceof Jwt) {
-           return  ((Jwt) principal).getClaims().get("sub").toString();
+            String sub = ((Jwt) principal).getClaimAsString("sub");
+            return sub != null ? sub : email;
         }
         else if (principal instanceof String) {
             email = (String) principal;
@@ -48,8 +49,9 @@ public class CustomHeaderInstitutionExtractor implements InstitutionNameExtracto
         if (Objects.isNull(principal)) {
             return name;
         }
-         if (principal instanceof Jwt) {
-            return  ((Jwt) principal).getClaims().get("firstName").toString();
+        if (principal instanceof Jwt) {
+            String firstName = ((Jwt) principal).getClaimAsString("firstName");
+            return firstName != null ? firstName : name;
         }
         return name;
     }
@@ -62,7 +64,8 @@ public class CustomHeaderInstitutionExtractor implements InstitutionNameExtracto
             return userType;
         }
         if (principal instanceof Jwt) {
-            return  ((Jwt) principal).getClaims().get("userType").toString();
+            String type = ((Jwt) principal).getClaimAsString("userType");
+            return type != null ? type : userType;
         }
         return userType;
     }
