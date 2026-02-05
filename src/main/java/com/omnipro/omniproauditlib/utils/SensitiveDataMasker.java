@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -17,6 +18,9 @@ import java.util.*;
 public class SensitiveDataMasker {
 
     private static final String MASK = "****";
+    private static final int MAX_DEPTH = 10;
+    private static final String CIRCULAR_REF = "[circular reference]";
+    private static final String MAX_DEPTH_MSG = "[max depth exceeded]";
 
     private static final Set<String> SENSITIVE_PATTERNS = Set.of(
             "password",
@@ -57,6 +61,22 @@ public class SensitiveDataMasker {
             "hash"
     );
 
+    // Types that should not be traversed (framework/infrastructure types)
+    private static final Set<String> SKIP_TYPE_PATTERNS = Set.of(
+            "org.springframework.http.",
+            "org.springframework.web.",
+            "jakarta.servlet.",
+            "javax.servlet.",
+            "org.apache.catalina.",
+            "org.apache.coyote.",
+            "org.apache.tomcat.",
+            "java.io.InputStream",
+            "java.io.OutputStream",
+            "java.nio.",
+            "sun.",
+            "com.sun."
+    );
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -88,9 +108,20 @@ public class SensitiveDataMasker {
      * Masks sensitive fields in a Map.
      */
     public static Map<String, Object> maskMap(Map<String, Object> data) {
-        if (data == null) {
-            return null;
+        return maskMap(data, new IdentityHashMap<>(), 0);
+    }
+
+    private static Map<String, Object> maskMap(Map<String, Object> data, IdentityHashMap<Object, Boolean> visited, int depth) {
+        if (data == null || depth > MAX_DEPTH) {
+            return data == null ? null : Map.of("_info", MAX_DEPTH_MSG);
         }
+
+        // Check for circular reference
+        if (visited.containsKey(data)) {
+            return Map.of("_info", CIRCULAR_REF);
+        }
+        visited.put(data, Boolean.TRUE);
+
         Map<String, Object> masked = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             String key = entry.getKey();
@@ -101,11 +132,11 @@ public class SensitiveDataMasker {
             } else if (value instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> nestedMap = (Map<String, Object>) value;
-                masked.put(key, maskMap(nestedMap));
+                masked.put(key, maskMap(nestedMap, visited, depth + 1));
             } else if (value instanceof List) {
-                masked.put(key, maskList((List<?>) value));
+                masked.put(key, maskList((List<?>) value, visited, depth + 1));
             } else if (value != null && isComplexObject(value)) {
-                masked.put(key, maskObject(value));
+                masked.put(key, maskObjectInternal(value, visited, depth + 1));
             } else {
                 masked.put(key, value);
             }
@@ -117,19 +148,32 @@ public class SensitiveDataMasker {
      * Masks sensitive fields in a List.
      */
     public static List<Object> maskList(List<?> data) {
+        return maskList(data, new IdentityHashMap<>(), 0);
+    }
+
+    private static List<Object> maskList(List<?> data, IdentityHashMap<Object, Boolean> visited, int depth) {
         if (data == null) {
             return null;
         }
+        if (depth > MAX_DEPTH) {
+            return List.of(MAX_DEPTH_MSG);
+        }
+
+        if (visited.containsKey(data)) {
+            return List.of(CIRCULAR_REF);
+        }
+        visited.put(data, Boolean.TRUE);
+
         List<Object> masked = new ArrayList<>();
         for (Object item : data) {
             if (item instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> mapItem = (Map<String, Object>) item;
-                masked.add(maskMap(mapItem));
+                masked.add(maskMap(mapItem, visited, depth + 1));
             } else if (item instanceof List) {
-                masked.add(maskList((List<?>) item));
+                masked.add(maskList((List<?>) item, visited, depth + 1));
             } else if (item != null && isComplexObject(item)) {
-                masked.add(maskObject(item));
+                masked.add(maskObjectInternal(item, visited, depth + 1));
             } else {
                 masked.add(item);
             }
@@ -141,25 +185,59 @@ public class SensitiveDataMasker {
      * Masks sensitive fields in an arbitrary object using reflection.
      */
     public static Object maskObject(Object obj) {
+        return maskObjectInternal(obj, new IdentityHashMap<>(), 0);
+    }
+
+    private static Object maskObjectInternal(Object obj, IdentityHashMap<Object, Boolean> visited, int depth) {
         if (obj == null) {
             return null;
         }
 
-        // Handle primitives and common types
+        // Depth limit check
+        if (depth > MAX_DEPTH) {
+            return MAX_DEPTH_MSG;
+        }
+
+        // Check for circular reference
+        if (visited.containsKey(obj)) {
+            return CIRCULAR_REF;
+        }
+
+        // Handle primitives and common types (no tracking needed)
         if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
             return obj;
         }
+
+        // Handle ResponseEntity specially - extract and mask the body
+        if (obj instanceof ResponseEntity<?> responseEntity) {
+            Object body = responseEntity.getBody();
+            if (body == null) {
+                return Map.of("status", responseEntity.getStatusCode().value(), "body", null);
+            }
+            return Map.of(
+                "status", responseEntity.getStatusCode().value(),
+                "body", maskObjectInternal(body, visited, depth + 1)
+            );
+        }
+
+        // Skip framework types that cause issues
+        if (shouldSkipType(obj.getClass())) {
+            return obj.getClass().getSimpleName() + "[skipped]";
+        }
+
+        // Mark as visited
+        visited.put(obj, Boolean.TRUE);
 
         // Handle Maps directly
         if (obj instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, Object> mapObj = (Map<String, Object>) obj;
-            return maskMap(mapObj);
+            return maskMap(mapObj, visited, depth);
         }
 
         // Handle Lists directly
         if (obj instanceof List) {
-            return maskList((List<?>) obj);
+            return maskList((List<?>) obj, visited, depth);
         }
 
         // Handle JsonNode
@@ -169,12 +247,20 @@ public class SensitiveDataMasker {
 
         // For complex objects, convert to Map and mask
         try {
-            Map<String, Object> objectAsMap = convertObjectToMap(obj);
-            return maskMap(objectAsMap);
+            Map<String, Object> objectAsMap = convertObjectToMap(obj, visited, depth);
+            return maskMap(objectAsMap, visited, depth);
         } catch (Exception e) {
             log.debug("Could not mask object of type {}: {}", obj.getClass().getName(), e.getMessage());
-            return obj.toString();
+            return obj.getClass().getSimpleName() + "[unmasked]";
         }
+    }
+
+    /**
+     * Checks if a type should be skipped (framework/infrastructure types).
+     */
+    private static boolean shouldSkipType(Class<?> clazz) {
+        String className = clazz.getName();
+        return SKIP_TYPE_PATTERNS.stream().anyMatch(className::startsWith);
     }
 
     /**
@@ -216,7 +302,7 @@ public class SensitiveDataMasker {
     /**
      * Converts an object to a Map using reflection.
      */
-    private static Map<String, Object> convertObjectToMap(Object obj) {
+    private static Map<String, Object> convertObjectToMap(Object obj, IdentityHashMap<Object, Boolean> visited, int depth) {
         Map<String, Object> map = new LinkedHashMap<>();
         Class<?> clazz = obj.getClass();
 
@@ -224,11 +310,28 @@ public class SensitiveDataMasker {
         List<Field> allFields = getAllFields(clazz);
 
         for (Field field : allFields) {
+            // Skip synthetic fields (generated by compiler)
+            if (field.isSynthetic()) {
+                continue;
+            }
+
             field.setAccessible(true);
             try {
                 String fieldName = field.getName();
                 Object value = field.get(obj);
-                map.put(fieldName, value);
+
+                // Skip if field type should be skipped
+                if (value != null && shouldSkipType(value.getClass())) {
+                    map.put(fieldName, value.getClass().getSimpleName() + "[skipped]");
+                    continue;
+                }
+
+                // Mask sensitive field names immediately
+                if (isSensitive(fieldName)) {
+                    map.put(fieldName, MASK);
+                } else {
+                    map.put(fieldName, value);
+                }
             } catch (IllegalAccessException e) {
                 log.debug("Could not access field {}: {}", field.getName(), e.getMessage());
             }
