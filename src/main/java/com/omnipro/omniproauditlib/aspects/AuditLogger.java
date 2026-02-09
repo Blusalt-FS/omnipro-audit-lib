@@ -5,6 +5,7 @@ import com.omnipro.omniproauditlib.dtos.AuditDto;
 import com.omnipro.omniproauditlib.dtos.AuditMetadataExtractor;
 import com.omnipro.omniproauditlib.pojos.AuditMetaData;
 import com.omnipro.omniproauditlib.services.AuditService;
+import com.omnipro.omniproauditlib.utils.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -48,7 +49,17 @@ public class AuditLogger {
         Object object [] = joinPoint.getArgs();
         Map<String, Object> request = new HashMap<>();
         for (int i = 0; i < object.length; i++) {
-            request.put(signature.getParameterNames()[i], object[i].toString());
+            String paramName = signature.getParameterNames()[i];
+            Object paramValue = object[i];
+
+            if (SensitiveDataMasker.isSensitive(paramName)) {
+                request.put(paramName, "****");
+            } else if (paramValue != null) {
+                Object maskedValue = SensitiveDataMasker.maskObject(paramValue);
+                request.put(paramName, maskedValue);
+            } else {
+                request.put(paramName, null);
+            }
         }
         Date startTime = Date.from(Instant.now());
 
@@ -67,12 +78,13 @@ public class AuditLogger {
             auditDto.setInstitutionName(auditMetaData.getInstitutionName());
             auditDto.setUserName(auditMetaData.getUsername());
             auditDto.setName(auditMetaData.getName());
-            auditDto.setUserType(auditDto.getUserType());
+            auditDto.setUserType(auditMetaData.getUserType());
         }
         auditService.saveAudit(auditDto, failOnError);
         Object proceed = joinPoint.proceed();
 
-        auditDto.setResponseBody(proceed);
+        Object maskedResponse = SensitiveDataMasker.maskObject(proceed);
+        auditDto.setResponseBody(maskedResponse);
         auditService.saveAudit(auditDto, failOnError);
 
         return proceed;
@@ -97,7 +109,7 @@ public class AuditLogger {
                     InetAddress inetAddress = InetAddress.getLocalHost();
                     ipAddress = inetAddress.getHostAddress();
                 } catch (UnknownHostException e) {
-                    e.printStackTrace();
+                    log.error("Failed to get local host address", e);
                 }
             }
         }
