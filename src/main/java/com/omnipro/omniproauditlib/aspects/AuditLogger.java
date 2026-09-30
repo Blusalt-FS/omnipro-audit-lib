@@ -76,6 +76,7 @@ public class AuditLogger {
         if (auditAnnotation.isMetaDataRequired()) {
             AuditMetaData auditMetaData = auditMetadataExtractor.getAuditMetaData();
             auditDto.setInstitutionName(auditMetaData.getInstitutionName());
+            auditDto.setInstitutionId(auditMetaData.getInstitutionId());
             auditDto.setUserName(auditMetaData.getUsername());
             auditDto.setName(auditMetaData.getName());
             auditDto.setUserType(auditMetaData.getUserType());

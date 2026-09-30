@@ -122,6 +122,24 @@ public class CustomHeaderInstitutionExtractor implements InstitutionNameExtracto
     }
 
     /**
+     * The id of the institution an audit row belongs to — what the audit service scopes reads on.
+     * Unlike {@link #extractInstitutionName}, this never falls back to the Client-ID header or the
+     * "BluSalt" placeholder: an end-user token without an institution yields null rather than
+     * anything the caller could influence. The institutionId header is only trusted for platform
+     * owners and non-JWT callers.
+     */
+    @Override
+    public String getInstitutionId(HttpServletRequest request) {
+        Jwt jwt = currentJwt();
+        if (jwt != null && !PLATFORM_OWNER.equalsIgnoreCase(jwt.getClaimAsString("userType"))) {
+            String institutionId = jwt.getClaimAsString("institutionId");
+            return StringUtils.isNotEmpty(institutionId) && !"null".equalsIgnoreCase(institutionId) ? institutionId : null;
+        }
+        String header = request != null ? request.getHeader(HEADER_NAMES.get(0)) : null;
+        return StringUtils.isNotEmpty(header) ? header : null;
+    }
+
+    /**
      * The merchant(s) an audit row belongs to, for MERCHANT/AGENT users only. The active merchant
      * comes from the X-Context-Id header but is only accepted if it appears in the token's signed
      * merchantContexts claim (directly or as a business under a parent merchant). With no header,

@@ -16,6 +16,8 @@ public interface InstitutionNameExtractor {
 
     String extractInstitutionName(HttpServletRequest request);
 
+    String getInstitutionId(HttpServletRequest request);
+
     List<String> getMerchantIds(HttpServletRequest request);
 }
 
