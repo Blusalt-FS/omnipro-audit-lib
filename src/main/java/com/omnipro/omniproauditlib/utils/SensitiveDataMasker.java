@@ -188,6 +188,19 @@ public class SensitiveDataMasker {
         return maskObjectInternal(obj, new IdentityHashMap<>(), 0);
     }
 
+    /**
+     * Builds a mutable two-entry map that tolerates null values.
+     * Unlike {@link Map#of}, this does not throw on null keys or values,
+     * which is required for void/empty responses (e.g. {@code ResponseEntity}
+     * with a null body).
+     */
+    private static Map<String, Object> nullSafeMap(String key1, Object value1, String key2, Object value2) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put(key1, value1);
+        map.put(key2, value2);
+        return map;
+    }
+
     private static Object maskObjectInternal(Object obj, IdentityHashMap<Object, Boolean> visited, int depth) {
         if (obj == null) {
             return null;
@@ -211,12 +224,10 @@ public class SensitiveDataMasker {
         // Handle ResponseEntity specially - extract and mask the body
         if (obj instanceof ResponseEntity<?> responseEntity) {
             Object body = responseEntity.getBody();
-            if (body == null) {
-                return Map.of("status", responseEntity.getStatusCode().value(), "body", null);
-            }
-            return Map.of(
+            Object maskedBody = (body == null) ? null : maskObjectInternal(body, visited, depth + 1);
+            return nullSafeMap(
                 "status", responseEntity.getStatusCode().value(),
-                "body", maskObjectInternal(body, visited, depth + 1)
+                "body", maskedBody
             );
         }
 

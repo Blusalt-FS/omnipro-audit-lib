@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
+
 @Configuration
 @RequiredArgsConstructor
 public class AuditlibConfig {
@@ -28,7 +30,9 @@ public class AuditlibConfig {
             String userName = institutionNameExtractor.getAuthenticatedUser();
             String name = institutionNameExtractor.getName();
             String userType = institutionNameExtractor.getUserType();
-            return new AuditMetaData(institutionName,userName,name,userType);
+            String userId = institutionNameExtractor.getUserId();
+            List<String> merchantIds = institutionNameExtractor.getMerchantIds(request);
+            return new AuditMetaData(institutionName,userName,name,userType,userId,merchantIds);
         };
     }
 }

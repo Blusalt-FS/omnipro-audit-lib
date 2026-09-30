@@ -4,6 +4,7 @@ import lombok.Data;
 
 import jakarta.validation.constraints.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -28,6 +29,8 @@ public class AuditDto {
     private Object responseBody;
     private String processId;
     private String userName;
+    private String userId;
+    private List<String> merchantIds;
     private String name;
     private String userType;
 }
