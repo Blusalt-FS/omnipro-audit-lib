@@ -9,6 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AuditMetaData {
     private String institutionName;
+    private String institutionId;
     private String username;
     private String name;
     private String userType;

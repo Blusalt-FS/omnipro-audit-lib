@@ -20,6 +20,8 @@ public class AuditDto {
     @NotBlank(message = "is required")
     private String institutionName;
 
+    private String institutionId;
+
     @NotNull(message = "is required")
     private Date startDate;
 

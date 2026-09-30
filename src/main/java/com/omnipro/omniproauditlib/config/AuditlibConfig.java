@@ -27,12 +27,13 @@ public class AuditlibConfig {
             HttpServletRequest request =
                     ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             String institutionName = institutionNameExtractor.extractInstitutionName(request);
+            String institutionId = institutionNameExtractor.getInstitutionId(request);
             String userName = institutionNameExtractor.getAuthenticatedUser();
             String name = institutionNameExtractor.getName();
             String userType = institutionNameExtractor.getUserType();
             String userId = institutionNameExtractor.getUserId();
             List<String> merchantIds = institutionNameExtractor.getMerchantIds(request);
-            return new AuditMetaData(institutionName,userName,name,userType,userId,merchantIds);
+            return new AuditMetaData(institutionName,institutionId,userName,name,userType,userId,merchantIds);
         };
     }
 }
