@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.3</version>
+		<version>3.2.12</version>
 		<relativePath/>
 	</parent>
 	<groupId>com.omnipro.omniproauditlib</groupId>
@@ -14,8 +14,13 @@
 	<name>omnipro-audit-library</name>
 	<description>omnipro-audit-library</description>
 	<properties>
+		<okhttp.version>4.12.1</okhttp.version>
+		<thymeleaf.version>3.1.7.RELEASE</thymeleaf.version>
+		<netty.version>4.1.141.Final</netty.version>
+		<spring-framework.version>6.1.21</spring-framework.version>
+		<tomcat.version>10.1.62</tomcat.version>
 		<java.version>17</java.version>
-		<spring-cloud.version>2023.0.0</spring-cloud.version>
+		<spring-cloud.version>2023.0.6</spring-cloud.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -59,7 +64,7 @@
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
-			<version>6.1.0-M1</version>
+			<version>6.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 
